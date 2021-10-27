@@ -120,25 +120,25 @@ async function addDepartment() {
 async function addRole() {
   const departements = await viewAllDepartments();
   const answer = await inquirer.prompt([
-        {
-        type: "input",
-        message: "What is the name of the role?",
-        name: "roleName",
-        },
-        {
-        type: "input",
-        message: "What is the salary of the role?",
-        name: "salary",
-        },
-        {
-        type: "list",
-        message: "Which departement does the role belong to?",
-        name: "departement",
-        choices: departements.map((departement) => {
-            return { name: departement.department_name, value: departement.id };
-        }),
-        }
-    ]);
+    {
+      type: "input",
+      message: "What is the name of the role?",
+      name: "roleName",
+    },
+    {
+      type: "input",
+      message: "What is the salary of the role?",
+      name: "salary",
+    },
+    {
+      type: "list",
+      message: "Which departement does the role belong to?",
+      name: "departement",
+      choices: departements.map((departement) => {
+        return { name: departement.department_name, value: departement.id };
+      }),
+    },
+  ]);
   const query = `INSERT INTO roles (title, salary, department_id)
     VALUES (?);`;
   db.promise().query(query, [
