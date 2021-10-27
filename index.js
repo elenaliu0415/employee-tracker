@@ -46,20 +46,20 @@ async function menu() {
       return menu();
 
     case "Add a department":
-        await addDepartment();
-    return menu();
+      await addDepartment();
+      return menu();
 
     case "Add a role":
-        await addRole();
-    return menu();
+      await addRole();
+      return menu();
 
     case "Add an employee":
-        await addEmployee();
-    return menu();
+      await addEmployee();
+      return menu();
 
     case "Update an employee role":
-        await updateEmployee();
-    return menu();
+      await updateEmployee();
+      return menu();
 
     case "Exit":
       db.end();
@@ -106,90 +106,126 @@ async function viewAllEmployee() {
   return employee;
 }
 
-async function addDepartment () {
-    const answer = await inquirer.prompt({
-        type: "input",
-        message: "Please enter a new department name: ",
-        name: "depName",
-    });
-    const query = `INSERT INTO department (department_name)
-    VALUES ?;`;
-    await db.promise().query(query, [[answer.depName]]);
+async function addDepartment() {
+  const answer = await inquirer.prompt({
+    type: "input",
+    message: "What is the name of the department?",
+    name: "depName",
+  });
+  const query = `INSERT INTO department (department_name)
+    VALUES (?);`;
+  await db.promise().query(query, [[answer.depName]]);
 }
 
-// async function addRole () {
-//     const answer = await inquirer.prompt({
-//         type: "input",
-//         message: "Please enter a new department name: ",
-//         name: "depName",
-//     });
-//     const query = `INSERT INTO department (department_name)
-//     VALUES ?;`;
-//     await db.promise().query(query, [[answer.depName]]);
-// }
+async function addRole() {
+  const departements = await viewAllDepartments();
+  const answer = await inquirer.prompt([
+        {
+        type: "input",
+        message: "What is the name of the role?",
+        name: "roleName",
+        },
+        {
+        type: "input",
+        message: "What is the salary of the role?",
+        name: "salary",
+        },
+        {
+        type: "list",
+        message: "Which departement does the role belong to?",
+        name: "departement",
+        choices: departements.map((departement) => {
+            return { name: departement.department_name, value: departement.id };
+        }),
+        }
+    ]);
+  const query = `INSERT INTO roles (title, salary, department_id)
+    VALUES (?);`;
+  db.promise().query(query, [
+    [answer.roleName, answer.salary, answer.departement],
+  ]);
+}
 
 async function getEmployees() {
-    const query = `SELECT employee.id, CONCAT(employee.first_name, ' ', employee.last_name) AS name
+  const query = `SELECT employee.id, CONCAT(employee.first_name, ' ', employee.last_name) AS name
     FROM employee ORDER BY employee.id;`;
-    const [employees] = await db.promise().query(query);
-    return employees;
+  const [employees] = await db.promise().query(query);
+  return employees;
 }
 
 async function addEmployee() {
-    const roles = await viewAllRoles();
-    const employees = await getEmployees();
-    const questions = [
+  const roles = await viewAllRoles();
+  const employees = await getEmployees();
+  const questions = [
     {
-        type: "input",
-        message: "Please enter your first name: ",
-        name: "firstName",
+      type: "input",
+      message: "Please enter your first name: ",
+      name: "firstName",
     },
     {
-        type: "input",
-        message: "Please enter your last name: ",
-        name: "lastName",
+      type: "input",
+      message: "Please enter your last name: ",
+      name: "lastName",
     },
     {
-        type: "list",
-        message: "What is your role? ",
-        name: "role",
-        choices: roles.map(role => {return {name: role.title, value: role.id}})
+      type: "list",
+      message: "What is your role? ",
+      name: "role",
+      choices: roles.map((role) => {
+        return { name: role.title, value: role.id };
+      }),
     },
     {
-        type: "list",
-        message: "Who is your manager? ",
-        name: "manager",
-        choices: [{name: 'None', value: 'null'}, ...employees.map(employee => {return {name: employee.name, value: employee.id}})]
+      type: "list",
+      message: "Who is your manager? ",
+      name: "manager",
+      choices: [
+        { name: "None", value: "null" },
+        ...employees.map((employee) => {
+          return { name: employee.name, value: employee.id };
+        }),
+      ],
     },
-    ];
-    const answers = await inquirer.prompt(questions);
-    const query = `INSERT INTO employee (first_name, last_name, role_id, manager_id)
+  ];
+  const answers = await inquirer.prompt(questions);
+  const query = `INSERT INTO employee (first_name, last_name, role_id, manager_id)
     VALUES (?);`;
-    db.promise().query(query, [[answers.firstName, answers.lastName, answers.role, answers.manager]]);
+  db.promise().query(query, [
+    [answers.firstName, answers.lastName, answers.role, answers.manager],
+  ]);
 }
 
 async function updateEmployee() {
-    const roles = await viewAllRoles();
-    const employees = await getEmployees();
-    const questions = [
-        {
-            type: "list",
-            message: "Which employee do you want to update? ",
-            name: "employee",
-            choices: [{name: 'None', value: 'null'}, ...employees.map(employee => {return {name: employee.name, value: employee.id}})]
-        },
-        {
-            type: "list",
-            message: "What is this employee's new role?",
-            name: "role",
-            choices: roles.map(role => {return {name: role.title, value: role.id}})
-        }
-    ];
-    const answers = await inquirer.prompt(questions);
-    const query = `UPDATE employee SET ? WHERE ?;`;
-    db.promise().query(query, [{role_id: answers.role}, {id: answers.employee}]);
+  const roles = await viewAllRoles();
+  const employees = await getEmployees();
+  const questions = [
+    {
+      type: "list",
+      message: "Which employee do you want to update? ",
+      name: "employee",
+      choices: [
+        { name: "None", value: "null" },
+        ...employees.map((employee) => {
+          return { name: employee.name, value: employee.id };
+        }),
+      ],
+    },
+    {
+      type: "list",
+      message: "What is this employee's new role?",
+      name: "role",
+      choices: roles.map((role) => {
+        return { name: role.title, value: role.id };
+      }),
+    },
+  ];
+  const answers = await inquirer.prompt(questions);
+  const query = `UPDATE employee SET ? WHERE ?;`;
+  db.promise().query(query, [
+    { role_id: answers.role },
+    { id: answers.employee },
+  ]);
 }
-
 
 async function init() {
   try {
@@ -199,5 +235,4 @@ async function init() {
   } catch (err) {
     console.log(err);
   }
-  //   await menu();
 }
