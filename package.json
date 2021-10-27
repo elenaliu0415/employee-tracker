@@ -18,6 +18,7 @@
   "homepage": "https://github.com/elenaliu0415/employee-tracker#readme",
   "dependencies": {
     "ascii-art": "^2.8.5",
+    "console.table": "^0.10.0",
     "inquirer": "^8.2.0",
     "mysql2": "^2.3.2"
   }
